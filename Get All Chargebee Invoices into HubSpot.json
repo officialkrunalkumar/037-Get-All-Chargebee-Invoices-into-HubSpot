@@ -1,0 +1,495 @@
+{
+  "name": "Get All Chargebee Invoice into HubSpot",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "617a75e8-0c35-4611-8a0d-57d07a2f7542",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -100,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/2-37766506",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"properties\" : {\n  \"invoice_number\": {{ $('Set Data').item.json.id }},\n  \"customer_id\": \"{{ $('Set Data').item.json.cid }}\",\n  \"subscription_id\": \"{{ $('Set Data').item.json.sid }}\",\n  \"status\": \"{{ $('Set Data').item.json.status }}\",\n  \"recurring\": \"{{ $('Set Data').item.json.recurring }}\",\n  \"amount_due\": {{ $('Set Data').item.json.due }},\n  \"amount_total\": {{ $('Set Data').item.json.amount }},\n  \"amount_paid\": {{ $('Set Data').item.json.paid }},\n  \"amount_adjusted\": {{ $('Set Data').item.json.adjustment }},\n  \"amount_write_off\": {{ $('Set Data').item.json.writeoff }},\n  \"credits_applied\": {{ $('Set Data').item.json.credits }},\n  \"first_invoice\": \"{{ $('Set Data').item.json.first_invoice }}\",\n  \"tax\": {{ $('Set Data').item.json.tax }},\n  \"first_name\": \"{{ $('Set Data').item.json.firstName }}\",\n  \"last_name\": \"{{ $('Set Data').item.json.lastName }}\",\n  \"company\": \"{{ $('Set Data').item.json.companyName }}\",\n  \"due_date\": {{ $('Set Data').item.json.due_date }},\n  \"invoice_date\": {{ $('Set Data').item.json.invoice_date }},\n  \"net_term_days\": {{ $('Set Data').item.json.net_term_days }}\n  }\n}",
+        "options": {}
+      },
+      "id": "0c905177-1c15-4e66-b66a-6f16b8e92a9a",
+      "name": "Create Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1160,
+        760
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "XAN2EAun4Xi7kKU6",
+          "name": "Krunal: HubSpot Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/2-37766506/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filterGroups\":[{\"filters\":[{\"propertyName\":\"invoice_number\",\"value\":\"{{ $json.id }}\",\"operator\":\"EQ\"}]}]\n}",
+        "options": {}
+      },
+      "id": "f14f505b-8c4b-4bd9-aa7a-e5dcefa90b4d",
+      "name": "Check Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        640
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "XAN2EAun4Xi7kKU6",
+          "name": "Krunal: HubSpot Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "= https://zeniai.chargebee.com/api/v2/invoices/{{ $json.number }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "id": "35b54139-7242-47f8-b799-8e70930ebab7",
+      "name": "Get Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        660
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "RR9kp6gtZl8lg187",
+          "name": "Chargebee"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "id": "028bf4de-2018-49b9-bbd2-6fd701d3ff72",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ec9dccda-4c55-4ce9-b6c9-a1f69c8c6f4a",
+              "name": "id",
+              "value": "={{ $json.invoice.id }}",
+              "type": "string"
+            },
+            {
+              "id": "1ea23f2e-a2c6-473f-a917-10f2a5b0bca7",
+              "name": "cid",
+              "value": "={{ $json.invoice.customer_id }}",
+              "type": "string"
+            },
+            {
+              "id": "1739ece3-dc66-4f54-90c9-e23d8817ae13",
+              "name": "sid",
+              "value": "={{ $json.invoice.subscription_id ? $json.invoice.subscription_id : null }}",
+              "type": "string"
+            },
+            {
+              "id": "2b852a78-d451-41a2-87d5-cd8640e85382",
+              "name": "recurring",
+              "value": "={{ $json.invoice.recurring }}",
+              "type": "boolean"
+            },
+            {
+              "id": "19ed8bd5-b95e-419a-9a07-5da8bc00afbd",
+              "name": "status",
+              "value": "={{ $json.invoice.status }}",
+              "type": "string"
+            },
+            {
+              "id": "118feb8a-2d9e-40a0-82e9-d1927bde237b",
+              "name": "due",
+              "value": "={{ $json.invoice.amount_due / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "4b9f596b-2675-48a4-a5fc-b61888c83922",
+              "name": "amount",
+              "value": "={{ $json.invoice.total / 100}}",
+              "type": "string"
+            },
+            {
+              "id": "831237e0-fba9-485a-8047-5cfbe6886f25",
+              "name": "paid",
+              "value": "={{ $json.invoice.amount_paid /100 }}",
+              "type": "number"
+            },
+            {
+              "id": "07a1ec99-50d4-4716-b8b5-69879128861d",
+              "name": "adjustment",
+              "value": "={{ $json.invoice.amount_adjusted / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "54ff9b37-529b-48ee-85fa-b798439b9fb2",
+              "name": "writeoff",
+              "value": "={{ $json.invoice.write_off_amount /100 }}",
+              "type": "number"
+            },
+            {
+              "id": "0a7147bc-635b-41aa-8982-a55c82fce088",
+              "name": "credits",
+              "value": "={{ $json.invoice.credits_applied / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "06b1b5ed-dbd8-43c5-9ce4-5e2561bc0bea",
+              "name": "first_invoice",
+              "value": "={{ $json.invoice.first_invoice }}",
+              "type": "boolean"
+            },
+            {
+              "id": "3f24cec5-92cd-41ca-887e-ac8ec031a961",
+              "name": "tax",
+              "value": "={{ $json.invoice.tax / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "6068b691-651f-42e1-b62b-b1f106e652ae",
+              "name": "firstName",
+              "value": "={{ $json.invoice.billing_address.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "bbb74292-ec77-4624-a22b-16c6bb74f440",
+              "name": "lastName",
+              "value": "={{ $json.invoice.billing_address.last_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f7c126e5-cb6c-40e0-b941-422e8b5c1326",
+              "name": "companyName",
+              "value": "={{ $json.invoice.billing_address.company }}",
+              "type": "string"
+            },
+            {
+              "id": "4a51a423-3fa3-4ebb-ad00-4beab06884fa",
+              "name": "due_date",
+              "value": "={{ $json.invoice.due_date * 1000 }}",
+              "type": "number"
+            },
+            {
+              "id": "ecdfe025-a5b3-4cc5-b0f9-b417b3357b05",
+              "name": "invoice_date",
+              "value": "={{ $json.invoice.date * 1000 }}",
+              "type": "number"
+            },
+            {
+              "id": "b646cce7-2bd4-4d4b-a900-3f68e7c8b56a",
+              "name": "net_term_days",
+              "value": "={{ $json.invoice.net_term_days }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cc7b1cfa-5188-499c-95da-d46230d87d91",
+      "name": "Set Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = [];\nfor (let i = 0; i <= 25000; i++) {\n  items.push({ number: i });\n}\nreturn items;"
+      },
+      "id": "07961be2-0537-4e49-9380-669428d6b51f",
+      "name": "0 to 25000",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9430b466-d6d5-458a-ba9e-1c4751fcc17a",
+              "leftValue": "={{ $json.error.message }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c6b4c193-4e23-4c3c-b923-e7b0f7b78d5f",
+      "name": "Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        300,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e5e3f374-bd48-4c71-9282-6063e113eb34",
+              "leftValue": "={{ $json.total }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "365ad925-4604-4642-9890-3a5f071389e2",
+      "name": "Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 0.5
+      },
+      "id": "bd315dc5-437b-461f-9f83-4b4980fe8c84",
+      "name": "Create Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1380,
+        760
+      ],
+      "webhookId": "ba537926-3476-46e5-95aa-109b91f8d837"
+    },
+    {
+      "parameters": {
+        "amount": 0.5
+      },
+      "id": "14a25e92-53d4-45cc-a225-cbfa17051bb3",
+      "name": "Skip Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1320,
+        420
+      ],
+      "webhookId": "062ab2c5-a084-4691-82f0-351a5fdc2feb"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Invoice": {
+      "main": [
+        [
+          {
+            "node": "Create Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Invoice": {
+      "main": [
+        [
+          {
+            "node": "Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Invoice": {
+      "main": [
+        [
+          {
+            "node": "Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "0 to 25000",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Data": {
+      "main": [
+        [
+          {
+            "node": "Check Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "0 to 25000": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Found?": {
+      "main": [
+        [
+          {
+            "node": "Set Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check": {
+      "main": [
+        [
+          {
+            "node": "Skip Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d78eb6ed-a4aa-422d-be00-94c71a5dbcf7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f35844c20bd7f8456f907e3b5a901af1cf08cec7fee985138953357fd244e5bd"
+  },
+  "id": "xP0VpMX4LXVzFdjM",
+  "tags": []
+}
